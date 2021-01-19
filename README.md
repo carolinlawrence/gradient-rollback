@@ -1,6 +1,6 @@
 # Gradient Rollback Source Code
 
-This repository contains code for the paper [Explaining Neural Matrix Factorization with Gradient Rollback](https://arxiv.org/abs/2010.05516) (Lawrence, Sztyler & Niepert, 2020).
+This repository contains code for the paper [Explaining Neural Matrix Factorization with Gradient Rollback](https://arxiv.org/abs/2010.05516) (Lawrence, Sztyler & Niepert, AAAI 2021).
 
 Gradient Rollback experiments consist of 3 steps:
 
