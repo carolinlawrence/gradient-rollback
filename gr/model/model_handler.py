@@ -296,8 +296,7 @@ class ModelHandler(tf.keras.Model):
         # experts is a list but we simply take the first
         self.experts = experts[0]
         self.embedding_dim = embedding_dim
-        self._expert_model = EXPERTS[self.experts](self._gp, self.embedding_dim,
-                                                   compute_influence_map)
+        self._expert_model = EXPERTS[self.experts](self._gp, self.embedding_dim)
         self._embedding_dim = self.embedding_dim
         self._model = self._expert_model
         self._model.use_multiprocessing = True
