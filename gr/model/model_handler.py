@@ -296,7 +296,8 @@ class ModelHandler(tf.keras.Model):
         # experts is a list but we simply take the first
         self.experts = experts[0]
         self.embedding_dim = embedding_dim
-        self._expert_model = EXPERTS[self.experts](self._gp, self.embedding_dim)
+        self._expert_model = EXPERTS[self.experts](self._gp, self.embedding_dim,
+                                                   compute_influence_map)
         self._embedding_dim = self.embedding_dim
         self._model = self._expert_model
         self._model.use_multiprocessing = True
@@ -572,7 +573,7 @@ class ModelHandler(tf.keras.Model):
         with tf.GradientTape() as tape:
             # For each entry in batch, get logits over entire nodes
             # dense_pos_neg_tails = tf.sparse.to_dense(pos_neg_tails, validate_indices=False)
-            logits, norm_tuple = self._model((heads_idx, relations_idx, pos_neg_tails))
+            logits = self._model((heads_idx, relations_idx, pos_neg_tails))
             if self.train_with_softmax is True:
                 LOGGER.info('Using softmax_cross_entropy_with_logits')
                 loss = tf.nn.softmax_cross_entropy_with_logits(labels=mask, logits=logits)
@@ -584,7 +585,7 @@ class ModelHandler(tf.keras.Model):
         self._model_params.optimizer.lr.assign(self.decay_lr(self.global_step))
         grads = tape.gradient(reduced_loss, self._model.trainable_variables)
         self._model_params.optimizer.apply_gradients(zip(grads, self._model.trainable_variables))
-        return reduced_loss, grads, norm_tuple
+        return reduced_loss, grads
 
     def train_epoch(self, compute_influence_map):
         """
@@ -607,7 +608,7 @@ class ModelHandler(tf.keras.Model):
                     continue
 
             prev_weights = copy.deepcopy(self._model.trainable_variables)
-            loss, grads, norm_tuple = self.get_loss_and_apply_gradient((heads_idx, relations_idx, pos_neg_tails, mask), compute_influence_map)
+            loss, grads = self.get_loss_and_apply_gradient((heads_idx, relations_idx, pos_neg_tails, mask), compute_influence_map)
             new_weights = self._model.trainable_variables
             infl_head, infl_rel, infl_tail = None, None, None
             if self._model_params.expert[0] == "DistMult":
@@ -637,7 +638,6 @@ class ModelHandler(tf.keras.Model):
             influences = (infl_head, infl_rel, infl_tail)
 
             if compute_influence_map is True:
-                self._model.update_bound_statistics(norm_tuple)
                 self._model.write_influence_map_gradient(influences,
                                                          heads_idx.numpy().tolist(),
                                                          relations_idx.numpy().tolist(),

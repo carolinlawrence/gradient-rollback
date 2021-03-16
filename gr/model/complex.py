@@ -158,7 +158,7 @@ from gr.model.expert import Expert
 LOGGER = logging.getLogger(__name__)
 
 try:
-    from gr.model.custom_embeddings import Embedding
+    from gr.model.custom_embeddings import CustomEmbedding
 except Exception as e:
     LOGGER.warning('Please see "Dependencies" in README.md to either (1) modify the TF Embedding layer or (2) comment this import and uncomment the one below. Note that option (2) will drastically slow down training and the evaluation step would take a very long time.')
     raise e
@@ -180,22 +180,22 @@ class ComplEx(Expert):
         self._regularizer_strength = regularizer_strength
         self._compute_influence_map = compute_influence_map
         self._influence_map_gradients = defaultdict(float)
-        self.embed_e_real = Embedding(input_dim=graph_properties.num_vertices,
+        self.embed_e_real = CustomEmbedding(input_dim=graph_properties.num_vertices,
                                       output_dim=self._embedding_dim,
                                       embeddings_initializer=tf.initializers.RandomUniform(),
                                       name=self._name + 'entity_real')
 
-        self.embed_e_img = Embedding(input_dim=graph_properties.num_vertices,
+        self.embed_e_img = CustomEmbedding(input_dim=graph_properties.num_vertices,
                                      output_dim=self._embedding_dim,
                                      embeddings_initializer=tf.initializers.RandomUniform(),
                                      name=self._name + 'entity_img')
 
-        self.embed_rel_real = Embedding(input_dim=graph_properties.num_relations,
+        self.embed_rel_real = CustomEmbedding(input_dim=graph_properties.num_relations,
                                         output_dim=self._embedding_dim,
                                         embeddings_initializer=tf.initializers.RandomUniform(),
                                         name=self._name + 'relation_real')
 
-        self.embed_rel_img = Embedding(input_dim=graph_properties.num_relations,
+        self.embed_rel_img = CustomEmbedding(input_dim=graph_properties.num_relations,
                                        output_dim=self._embedding_dim,
                                        embeddings_initializer=tf.initializers.RandomUniform(),
                                        name=self._name + 'relation_img')
@@ -221,7 +221,7 @@ class ComplEx(Expert):
         imgimgreal = tf.matmul(head_img * relation_img, tail_real, transpose_b=True)
 
         scores_emb = realrealreal + realimgimg + imgrealimg - imgimgreal
-        return scores_emb, None  #DistMult also returns norm
+        return scores_emb
 
     def predict_tail(self, inputs):
         head, relation = inputs

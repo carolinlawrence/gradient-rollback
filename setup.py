@@ -163,7 +163,6 @@ install_requires = [
     'tensorflow-hub==0.7.0',
     'tensorflow-metadata==0.21.1',
     'tensorflow-probability==0.7.0',
-    'tensorflow-gpu==2.1.0'
 ]
 
 

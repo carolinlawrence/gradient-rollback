@@ -162,7 +162,7 @@ from gr.model.expert import Expert
 LOGGER = logging.getLogger(__name__)
 
 try:
-    from gr.model.custom_embeddings import Embedding
+    from gr.model.custom_embeddings import CustomEmbedding
 except Exception as e:
     LOGGER.warning('Please see "Dependencies" in README.md to either (1) modify the TF Embedding layer or (2) comment this import and uncomment the one below. Note that option (2) will drastically slow down training and the evaluation step would take a very long time.')
     raise e
@@ -188,11 +188,11 @@ class DistMult(Expert):
         self.max_constant = 0.0
         self.tf_precision = tf.float64
 
-        self._node_embedding = Embedding(input_dim=graph_properties.num_vertices,
+        self._node_embedding = CustomEmbedding(input_dim=graph_properties.num_vertices,
                                          output_dim=self._embedding_dim,
                                          embeddings_initializer=tf.initializers.RandomUniform(),
                                          name=self._name + 'node_embedding')
-        self._relation_embedding = Embedding(input_dim=graph_properties.num_relations,
+        self._relation_embedding = CustomEmbedding(input_dim=graph_properties.num_relations,
                                              output_dim=self._embedding_dim,
                                              embeddings_initializer=tf.initializers.RandomUniform(),
                                              name=self._name + 'relation_embedding')
@@ -225,13 +225,7 @@ class DistMult(Expert):
             tail_embedded = self._node_embedding(tails_idx)
             head_rel = head_embedded*relation_embedded
             scores_emb = tf.matmul(head_rel, tail_embedded, transpose_b=True)
-        norm_tuple = None
-        if self._compute_influence_map:
-            head_rel = tf.norm(head_rel)
-            rel_tail = tf.norm(relation_embedded*tail_embedded[0])
-            head_tail = tf.norm(head_embedded*tail_embedded[0])
-            norm_tuple = (head_rel, rel_tail, head_tail)
-        return scores_emb, norm_tuple
+        return scores_emb
 
     def update_bound_statistics(self, inputs):
         """
